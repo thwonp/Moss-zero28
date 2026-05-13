@@ -13,6 +13,13 @@ patch -N -p1 < "$SCRIPT_DIR/patches/0001-feat-support-fb-bootlogo-rotate.patch" 
 
 cd "$SCRIPT_DIR"
 
+# Remove broken thirdparty IoT package Makefiles that cause OpenWrt scanner errors
+rm -rf /root/lichee/package/thirdparty/duilite-lib \
+       /root/lichee/package/thirdparty/midea-duilite-lib \
+       /root/lichee/package/thirdparty/midea-mspeech-lib \
+       /root/lichee/package/thirdparty/midea-player-lib \
+       /root/lichee/package/thirdparty/uvoice-lib
+
 # board.dts: enable 90° HW rotation for portrait 480×640 panel → logical landscape 640×480
 DTS="/root/lichee/device/config/chips/a133/configs/aw3/board.dts"
 sed -i 's/fb0_width\s*=\s*<480>/fb0_width               = <640>/' "$DTS"
