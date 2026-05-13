@@ -4,6 +4,13 @@ changes (not present in configs)
 
 ---
 
+patches/ setup (required before running install.sh)
+    The patches/ directory is gitignored. Before running install.sh, copy the three patch
+    files from the SDK into git/Moss-zero28/patches/ using the filenames listed in
+    project-docs/z28/moss-build-plan.md. Do not commit patches/ to git.
+
+---
+
 building Tina Linux (from source, not provided in this repo):
 
 cd ~/lichee
@@ -145,7 +152,22 @@ enable
 PHASE III (hook into earlier phase if possible)
 enable
 	Target Images
-		downsize the kernel size (EXPERIMENTAL) 
+		downsize the kernel size (EXPERIMENTAL)
+CAUTION: the following Phase III items must be KEPT for NextUI + Portmaster:
+    Network > wpa-supplicant     (WiFi; NextUI uses this)
+    Network > wpa-cli            (WiFi)
+    Kernel modules > Wireless Drivers > (everything)   (WiFi)
+
+The following are verified NOT used by NextUI or Portmaster and are safe to disable:
+    Utilities > getevent, dbus-utils, iozone3, memtester, stress
+    Libraries > libinput, mtdev, libsndfile, uclibcxx, sbc, libuclient,
+                libsocket_db, libgcrypt, libgpg-error, libexpat,
+                libdbus, libconfig, gnome (everything), libffi, libxml2, mtdev
+    Network > hostapd, iperf, uclient-fetch
+
+Boot time win (low risk — enable this):
+    Target Images > downsize the kernel size (EXPERIMENTAL)
+
 disable
 	Utilities
 		getevent
@@ -210,5 +232,13 @@ disable
 
 before building
 	~/workspace/assets/install.sh
-after building run 
+after building run
 	add-rootfs-demo
+
+---
+
+after flashing
+    If the display image appears upside-down (180° wrong), open install.sh and change
+        degree0 = <1>   →   degree0 = <3>
+    in the board.dts sed block, then re-run install.sh and rebuild.
+

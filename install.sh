@@ -1,6 +1,32 @@
 #!/bin/bash
 
-cd $(dirname "$0")
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# Apply rotation patches (idempotent: -N skips already-applied hunks; || true ignores the
+# non-zero exit patch returns when skipping)
+cd /root/lichee/lichee/linux-4.9
+patch -N -p1 < "$SCRIPT_DIR/patches/0001-feat-support-disp2-fb-hw-rotate.patch" || true
+patch -N -p1 < "$SCRIPT_DIR/patches/0002-zero28-g2d-90-270-rot-fix.patch" || true
+
+cd /root/lichee/lichee/brandy-2.0/u-boot-2018
+patch -N -p1 < "$SCRIPT_DIR/patches/0001-feat-support-fb-bootlogo-rotate.patch" || true
+
+cd "$SCRIPT_DIR"
+
+# board.dts: enable 90° HW rotation for portrait 480×640 panel → logical landscape 640×480
+DTS="/root/lichee/device/config/chips/a133/configs/aw3/board.dts"
+sed -i 's/fb0_width\s*=\s*<480>/fb0_width               = <640>/' "$DTS"
+sed -i 's/fb0_height\s*=\s*<640>/fb0_height              = <480>/' "$DTS"
+grep -q "disp_rotation_used" "$DTS" || \
+    sed -i '/fb0_height\s*=\s*<480>/a \\t\t\tdisp_rotation_used       = <1>;\n\t\t\tdegree0                  = <1>;\n\t\t\tfb0_buffer_num           = <2>;' "$DTS"
+
+# Kernel defconfig additions (idempotent guards)
+DEF="/root/lichee/lichee/linux-4.9/arch/arm64/configs/sun50iw10p1smp_defconfig"
+grep -q "SUNXI_DISP2_FB_HW_ROTATION_SUPPORT" "$DEF" || echo "CONFIG_SUNXI_DISP2_FB_HW_ROTATION_SUPPORT=y"  >> "$DEF"
+grep -q "CONFIG_NLS_ISO8859_1"               "$DEF" || echo "CONFIG_NLS_ISO8859_1=y"                        >> "$DEF"
+grep -q "CONFIG_NLS_UTF8"                    "$DEF" || echo "CONFIG_NLS_UTF8=y"                             >> "$DEF"
+grep -q "CONFIG_FAT_DEFAULT_IOCHARSET"       "$DEF" || echo 'CONFIG_FAT_DEFAULT_IOCHARSET="utf8"'           >> "$DEF"
+grep -q "CONFIG_VIDEO_SUNXI_VIN"             "$DEF" || echo "# CONFIG_VIDEO_SUNXI_VIN is not set"           >> "$DEF"
 
 cp bootlogo.bmp /root/lichee/target/allwinner/generic/boot-resource/boot-resource/
 
