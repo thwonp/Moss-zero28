@@ -4,6 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=UTC
 ENV LANG=C.UTF-8
 ENV FORCE_UNSAFE_CONFIGURE=1
+ENV PATH="/root/lichee/lichee/arisc/ar100s/tools/toolchain/bin:${PATH}"
 
 RUN apt-get update && apt-get install -y \
     # Core build tools
