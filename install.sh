@@ -26,6 +26,11 @@ patch -N -p1 < "$SCRIPT_DIR/patches/0001-feat-support-fb-bootlogo-rotate.patch" 
 
 cd "$SCRIPT_DIR"
 
+# Fix netifd build failure under GCC 7 (-Werror=format-truncation on old snprintf code)
+NETIFD_MK="/root/lichee/package/network/config/netifd/Makefile"
+grep -q "Wno-error=format-truncation" "$NETIFD_MK" || \
+    sed -i '/^CMAKE_OPTIONS/i TARGET_CFLAGS += -Wno-error=format-truncation\n' "$NETIFD_MK"
+
 # Remove broken thirdparty IoT package Makefiles that cause OpenWrt scanner errors
 rm -rf /root/lichee/package/thirdparty/duilite-lib \
        /root/lichee/package/thirdparty/midea-duilite-lib \
