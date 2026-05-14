@@ -81,8 +81,9 @@ EOF
 fi
 
 # Remove packages that fail to build under glibc 2.29 and are not needed on Zero28
-rm -rf /root/lichee/package/allwinner/camerademo   # libisp.so references major()/minor() absent from glibc 2.29
-rm -rf /root/lichee/package/allwinner/resample      # libc.so missing dependency; libsamplerate covers this
+rm -rf /root/lichee/package/allwinner/camerademo                        # libisp.so references major()/minor() absent from glibc 2.29
+rm -rf /root/lichee/package/allwinner/resample                          # libc.so missing dependency; libsamplerate covers this
+rm -rf /root/lichee/package/allwinner/tina_multimedia_demo/trecorderdemo  # links awrecorder→libisp.so, same major()/minor() failure
 
 # Fix ffmpeg: remove Allwinner ISP camera deps (libAWIspApi disabled; not needed for playback)
 FFMPEG_MK="/root/lichee/package/multimedia/ffmpeg/Makefile"
