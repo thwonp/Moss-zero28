@@ -120,4 +120,4 @@ File: `bootlogo.bmp`
 
 ## Reference
 
-See `notes.txt` for details on what `install.sh` does, the container scripts, and the full package enable/disable list in `moss-tina.config`.
+See `notes.md` for details on what `install.sh` does, the container scripts, and the full package enable/disable list in `moss-tina.config`.
