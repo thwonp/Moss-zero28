@@ -86,4 +86,4 @@ exec podman run --rm \
     -v "$SDK:/root/lichee" \
     -v "$ASSETS:/root/workspace/assets" \
     localhost/moss-build-env \
-    /bin/bash /root/workspace/assets/build-inner.sh
+    /bin/bash -i /root/workspace/assets/build-inner.sh
