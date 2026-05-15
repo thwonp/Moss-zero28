@@ -164,6 +164,9 @@ rm -rf /root/lichee/out/a133-aw3/compile_dir/target/cairo-1.14.6
 E2FS_MK="/root/lichee/package/utils/e2fsprogs/Makefile"
 grep -q "sysmacros" "$E2FS_MK" || \
     sed -i 's/-fdata-sections$/-fdata-sections -include sys\/sysmacros.h/' "$E2FS_MK"
+# Fix e2fsprogs: stat64/fstat64/sync_file_range/nftw64/FTW_PHYS etc. hidden without _GNU_SOURCE (glibc 2.29)
+grep -q "_GNU_SOURCE" "$E2FS_MK" || \
+    sed -i 's/-include sys\/sysmacros\.h/-include sys\/sysmacros.h -D_GNU_SOURCE/' "$E2FS_MK"
 
 # Fix xr829: SUPPORT_EPTA defined unconditionally but epta_stat_dbg_ctrl is
 # only in debug.o (compiled only with CONFIG_XRADIO_DEBUG); tie them together
