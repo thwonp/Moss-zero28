@@ -51,25 +51,32 @@ if [ "$CLEAN" -eq 1 ]; then
     SDK_PARENT="$(dirname "$SDK")"
     TMPDIR_DL="$(mktemp -d)"
 
-    # Preserve dl/ (contains linaro-7.4 toolchain; not in tarball)
+    # Preserve dl/ (contains linaro-7.4 toolchain; not in tarball).
+    # Use podman unshare so files written by the container under subuid-mapped uids
+    # (not host-user uid) are accessible inside the user namespace.
     if [ -d "$SDK/dl" ]; then
         echo "Preserving dl/ ..."
-        cp -a "$SDK/dl" "$TMPDIR_DL/"
+        podman unshare cp -a "$SDK/dl" "$TMPDIR_DL/"
     fi
 
     echo "Removing old SDK ..."
-    rm -rf "$SDK"
+    # podman unshare required: build artifacts may be owned by subuid-mapped uids
+    # that the host user cannot remove directly. Entering the user namespace makes
+    # them appear as root, which can remove them without sudo.
+    podman unshare rm -rf "$SDK"
 
     echo "Extracting tarball ..."
     tar -xf "$SDK_TAR" -C "$SDK_PARENT"
 
-    # Restore dl/ into freshly extracted SDK
+    # Restore dl/ into freshly extracted SDK.
+    # dl/ backup was made by podman unshare, so files are subuid-mapped; restore
+    # the same way. The freshly extracted SDK is user-owned so the cp into it works.
     if [ -d "$TMPDIR_DL/dl" ]; then
         echo "Restoring dl/ ..."
-        cp -a "$TMPDIR_DL/dl" "$SDK/"
+        podman unshare cp -a "$TMPDIR_DL/dl" "$SDK/"
     fi
 
-    rm -rf "$TMPDIR_DL"
+    podman unshare rm -rf "$TMPDIR_DL"
     echo "--- SDK restore complete ---"
     echo ""
 fi
