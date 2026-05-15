@@ -1,25 +1,20 @@
 #!/bin/bash
-# Automated build wrapper for Tina Linux / Moss Zero28 firmware.
-# Run this script from the host.
+# Host-side build prep for Tina Linux / Moss Zero28 firmware.
+# Run from the host.
 #
 # Usage: ./rebuild.sh [--clean]
 #
-# --clean: Wipes and restores the SDK from the tarball before building.
-#          IMPORTANT: Exit any running build container before using --clean.
-#          Removing the SDK while a container is bind-mounting it leaves
-#          the container's /root/lichee/ stale.
+# (no flag)  Print next-step instructions.
+# --clean    Wipe and restore the SDK from tarball first, then print instructions.
+#            IMPORTANT: Exit any running build container before using --clean.
+#            Removing the SDK while a container is bind-mounting it leaves
+#            the container's /root/lichee/ stale.
 
 set -e
 
 SDK="/home/thwonp/Downloads/Zero 28 Linux_SDK/Stock SDK/lichee"
 SDK_TAR="$HOME/Downloads/Zero 28 Linux_SDK/Archive/mplus_a133_tina_v1.0.tar.gz"
 ASSETS="$(cd "$(dirname "$0")" && pwd)"
-
-if ! podman image exists localhost/moss-build-env 2>/dev/null; then
-    echo "Image not found — build it first:"
-    echo "  cd $ASSETS && podman build -t moss-build-env ."
-    exit 1
-fi
 
 # Parse arguments
 CLEAN=0
@@ -38,9 +33,7 @@ done
 
 if [ "$CLEAN" -eq 1 ]; then
     echo "--- Clean restore: wiping SDK and re-extracting from tarball ---"
-    echo "NOTE: If you have an active build container open, exit it first."
-    echo "      Removing the SDK while a container is bind-mounting it will"
-    echo "      leave that container's /root/lichee/ stale."
+    echo "NOTE: Exit any active build container before continuing."
     echo ""
 
     if [ ! -f "$SDK_TAR" ]; then
@@ -52,25 +45,19 @@ if [ "$CLEAN" -eq 1 ]; then
     TMPDIR_DL="$(mktemp -d)"
 
     # Preserve dl/ (contains linaro-7.4 toolchain; not in tarball).
-    # Use podman unshare so files written by the container under subuid-mapped uids
-    # (not host-user uid) are accessible inside the user namespace.
+    # podman unshare: build artifacts may be owned by subuid-mapped uids
+    # that the host user cannot read/remove directly.
     if [ -d "$SDK/dl" ]; then
         echo "Preserving dl/ ..."
         podman unshare cp -a "$SDK/dl" "$TMPDIR_DL/"
     fi
 
     echo "Removing old SDK ..."
-    # podman unshare required: build artifacts may be owned by subuid-mapped uids
-    # that the host user cannot remove directly. Entering the user namespace makes
-    # them appear as root, which can remove them without sudo.
     podman unshare rm -rf "$SDK"
 
     echo "Extracting tarball ..."
     tar -xf "$SDK_TAR" -C "$SDK_PARENT"
 
-    # Restore dl/ into freshly extracted SDK.
-    # dl/ backup was made by podman unshare, so files are subuid-mapped; restore
-    # the same way. The freshly extracted SDK is user-owned so the cp into it works.
     if [ -d "$TMPDIR_DL/dl" ]; then
         echo "Restoring dl/ ..."
         podman unshare cp -a "$TMPDIR_DL/dl" "$SDK/"
@@ -81,9 +68,12 @@ if [ "$CLEAN" -eq 1 ]; then
     echo ""
 fi
 
-exec podman run --rm \
-    --security-opt label=disable \
-    -v "$SDK:/root/lichee" \
-    -v "$ASSETS:/root/workspace/assets" \
-    localhost/moss-build-env \
-    /bin/bash -i /root/workspace/assets/build-inner.sh
+if ! podman image exists localhost/moss-build-env 2>/dev/null; then
+    echo "WARNING: Container image not found. Build it first:"
+    echo "  podman build -t moss-build-env $ASSETS"
+    echo ""
+fi
+
+echo "SDK ready. To build:"
+echo "  1. $ASSETS/build-env.sh"
+echo "  2. Inside the container: bash /root/workspace/assets/build-inner.sh"

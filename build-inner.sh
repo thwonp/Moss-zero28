@@ -10,13 +10,12 @@ trap 'echo "[build-inner.sh] FAILED at line $LINENO: $BASH_COMMAND" >&2' ERR
 
 cd /root/lichee
 
-# 'source' is required here because lunch, add-rootfs-demo, and pack are
-# shell functions defined by envsetup.sh, not standalone executables.
-# bash -i (set by rebuild.sh) is required so envsetup.sh sees an interactive
-# shell and defines those functions — it guards them with [[ $- == *i* ]].
+# lunch, add-rootfs-demo, and pack are shell functions defined by envsetup.sh,
+# not standalone executables. Source in this process to make them available.
 source build/envsetup.sh
 
-# Numeric arg selects board non-interactively (item 3 = a133_aw3-tina).
+# Numeric arg selects board target; 3 = a133_aw3-tina.
+# If this prompts interactively, select 3.
 lunch 3
 
 export PATH="/root/lichee/lichee/arisc/ar100s/tools/toolchain/bin:$PATH"
