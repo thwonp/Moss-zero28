@@ -42,7 +42,7 @@ patch -N -p1 < "$SCRIPT_DIR/patches/0001-feat-support-fb-bootlogo-rotate.patch" 
 
 cd "$SCRIPT_DIR"
 
-# Patch board defconfig for Phase II toolchain (GCC 7.4.1, binutils 2.28, glibc 2.29).
+# Patch board defconfig for GCC 7.4.1 / binutils 2.28 / glibc 2.29 toolchain.
 # The Tina build system copies target/allwinner/a133-aw3/defconfig over .config at the
 # start of every make invocation (toplevel.mk .config rule, Tina elif branch). Because
 # this copy happens inside a recursive sub-make spawned after prepare-tmpinfo refreshes
@@ -77,17 +77,17 @@ CONFIG_BINUTILS_USE_VERSION_2_28=y
 CONFIG_GLIBC_USE_VERSION_2_29=y
 CONFIG_LIBC_USE_GLIBC=y
 EOF
-    echo "Patched board defconfig: Phase II toolchain (GCC 7.4.1, binutils 2.28, glibc 2.29)"
+    echo "Patched board defconfig: GCC 7.4.1 / binutils 2.28 / glibc 2.29 toolchain"
 fi
 
-# Sync board defconfig with phase3-complete.config for all package/config settings.
+# Sync board defconfig with moss-tina.config for all package/config settings.
 # set-config.sh alone is insufficient: Tina's toplevel.mk .config rule unconditionally
 # copies the board defconfig over .config at the start of every make invocation
 # (elif TARGET_BUILD_VARIANT=tina branch). The board defconfig is the true source of
-# truth. For each key in phase3-complete.config, strip the existing value from the
+# truth. For each key in moss-tina.config, strip the existing value from the
 # board defconfig and re-append the desired value. Board-specific keys absent from
-# phase3-complete.config are left untouched.
-DESIRED="/root/workspace/assets/configs/phase3-complete.config"
+# moss-tina.config are left untouched.
+DESIRED="/root/workspace/assets/configs/moss-tina.config"
 TMPSCRIPT=$(mktemp)
 while IFS= read -r line; do
     if [[ "$line" =~ ^(CONFIG_[^=]+)= ]]; then
@@ -102,7 +102,7 @@ done < "$DESIRED" > "$TMPSCRIPT"
 sed -i -f "$TMPSCRIPT" "$DEFCONFIG"
 rm "$TMPSCRIPT"
 grep -E '^(CONFIG_|# CONFIG_)' "$DESIRED" >> "$DEFCONFIG"
-echo '[install.sh] Synced board defconfig with phase3-complete.config'
+echo '[install.sh] Synced board defconfig with moss-tina.config'
 
 # Fix fontconfig 2.12.1: FC_OBJECT(CHAR_WIDTH,...,NULL) generates PRI_CHAR_WIDTH_STRONG/WEAK via the
 # dummy enum but they are absent from the real FcMatcherPriority enum; GCC 7 rejects the reference

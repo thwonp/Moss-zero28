@@ -1,11 +1,11 @@
 #!/bin/bash
-# Overlays phase3-complete.config onto the normalized .config.
+# Overlays moss-tina.config onto the normalized .config.
 # Run AFTER "yes '' | make oldconfig" and BEFORE "make -j8".
 # Applies every setting from the saved config, overwriting whatever normalization reset.
 
 set -e
 CONFIG="/root/lichee/.config"
-DESIRED="/root/workspace/assets/configs/phase3-complete.config"
+DESIRED="/root/workspace/assets/configs/moss-tina.config"
 
 [ -f "$CONFIG" ] || { echo "Error: $CONFIG not found. Run 'yes \"\" | make oldconfig' first." >&2; exit 1; }
 [ -f "$DESIRED" ] || { echo "Error: $DESIRED not found." >&2; exit 1; }

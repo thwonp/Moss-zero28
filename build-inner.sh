@@ -33,8 +33,8 @@ echo "[build-inner.sh] Build environment OK (lunch already run)"
 
 export PATH="/root/lichee/lichee/arisc/ar100s/tools/toolchain/bin:$PATH"
 
-echo "[build-inner.sh] Copying phase3-complete.config to .config ..."
-cp /root/workspace/assets/configs/phase3-complete.config .config
+echo "[build-inner.sh] Copying moss-tina.config to .config ..."
+cp /root/workspace/assets/configs/moss-tina.config .config
 echo "[build-inner.sh] Config copied — $(wc -l < .config) lines"
 
 echo "[build-inner.sh] Running install.sh ..."
@@ -44,7 +44,7 @@ echo "[build-inner.sh] --- Patch verification ---"
 _ok() { echo "  [OK]   $1"; }
 _fail() { echo "  [FAIL] $1" >&2; }
 
-# Board defconfig: Phase II toolchain
+# Board defconfig: GCC 7.4.1 / glibc 2.29 toolchain
 grep -q 'linaro-7.4' target/allwinner/a133-aw3/defconfig \
     && _ok "Board defconfig: GCC 7.4 toolchain" \
     || _fail "Board defconfig: GCC 7.4 toolchain NOT patched"
