@@ -3,7 +3,7 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # Apply rotation patches (idempotent: -N skips already-applied hunks; || true ignores the
-# non-zero exit patch returns when skipping)
+# non-zero exit patch returns when skipping; 006-lazy-g2d-open applied inline below)
 cd /root/lichee/lichee/linux-4.9
 patch -N -p1 < "$SCRIPT_DIR/patches/0001-feat-support-disp2-fb-hw-rotate.patch" || true
 python3 -c "
@@ -28,6 +28,11 @@ DEV_FB="/root/lichee/lichee/linux-4.9/drivers/video/fbdev/sunxi/disp2/disp/dev_f
 sed -i '72s/dst_image_h\.width;/dst_image_h.height;/' "$FB_G2D"
 sed -i '74s/dst_image_h\.height;/dst_image_h.width;/' "$FB_G2D"
 sed -i 's/FB_ROTATION_HW_0 && degree > FB_ROTATION_HW_270/FB_ROTATION_HW_0 || degree > FB_ROTATION_HW_270/' "$FB_G2D"
+patch -N -p1 < "$SCRIPT_DIR/patches/006-lazy-g2d-open.patch" || true  # lazy g2d_open fix
+patch -N -p1 < "$SCRIPT_DIR/patches/008-remove-init-apply.patch" || true  # remove init apply()
+patch -N -p1 < "$SCRIPT_DIR/patches/009-diag-apply-early-return.patch" || true  # DIAG 009
+patch -N -p1 < "$SCRIPT_DIR/patches/010-diag-create-early-return.patch" || true  # DIAG 010
+patch -N -p1 < "$SCRIPT_DIR/patches/011-diag-copy-boot-fb-early-return.patch" || true  # DIAG 011
 python3 -c "
 fname = '$DEV_FB'
 with open(fname) as f: c = f.read()
