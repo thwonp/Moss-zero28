@@ -212,6 +212,12 @@ sed -i '/^# CONFIG_SUNXI_DISP2_FB_ROTATION_SUPPORT is not set$/d'             "$
 grep -q "CONFIG_SUNXI_G2D=y"                           "$BCONFIG" || echo "CONFIG_SUNXI_G2D=y"                           >> "$BCONFIG"
 grep -q "CONFIG_SUNXI_G2D_ROTATE=y"                    "$BCONFIG" || echo "CONFIG_SUNXI_G2D_ROTATE=y"                    >> "$BCONFIG"
 grep -q "CONFIG_SUNXI_DISP2_FB_HW_ROTATION_SUPPORT=y" "$BCONFIG" || echo "CONFIG_SUNXI_DISP2_FB_HW_ROTATION_SUPPORT=y" >> "$BCONFIG"
+# XR829 WiFi — built-in (SDIO bus); sub-symbols invisible in config-4.9 while gate is disabled
+sed -i '/^# CONFIG_XR829_WLAN is not set$/d'  "$BCONFIG"
+grep -q "CONFIG_XR829_WLAN=y"  "$BCONFIG" || echo "CONFIG_XR829_WLAN=y"  >> "$BCONFIG"
+grep -q "CONFIG_XRADIO=y"      "$BCONFIG" || echo "CONFIG_XRADIO=y"      >> "$BCONFIG"
+grep -q "CONFIG_XRADIO_SDIO=y" "$BCONFIG" || echo "CONFIG_XRADIO_SDIO=y" >> "$BCONFIG"
+grep -q "CONFIG_XRMAC=y"       "$BCONFIG" || echo "CONFIG_XRMAC=y"       >> "$BCONFIG"
 DEF="/root/lichee/lichee/linux-4.9/arch/arm64/configs/sun50iw10p1smp_defconfig"
 grep -q "CONFIG_NLS_ISO8859_1"               "$DEF" || echo "CONFIG_NLS_ISO8859_1=y"                        >> "$DEF"
 grep -q "CONFIG_NLS_UTF8"                    "$DEF" || echo "CONFIG_NLS_UTF8=y"                             >> "$DEF"
@@ -226,7 +232,11 @@ if [ -f "$KCONFIG" ] && [ -x "$SCRIPTS_CONFIG" ]; then
         --disable SUNXI_DISP2_FB_DISABLE_ROTATE \
         --enable  SUNXI_G2D \
         --enable  SUNXI_G2D_ROTATE \
-        --enable  SUNXI_DISP2_FB_HW_ROTATION_SUPPORT
+        --enable  SUNXI_DISP2_FB_HW_ROTATION_SUPPORT \
+        --enable  XR829_WLAN \
+        --enable  XRADIO \
+        --enable  XRADIO_SDIO \
+        --enable  XRMAC
     echo "[install.sh] Patched kernel .config via scripts/config"
 fi
 
