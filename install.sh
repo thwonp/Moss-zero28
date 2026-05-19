@@ -2,10 +2,24 @@
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+apply_patch() {
+    local f="$1"
+    local label; label="$(basename "$f")"
+    local out; out="$(patch --dry-run -N -p1 < "$f" 2>&1)"
+    if echo "$out" | grep -q "^Hunk.*FAILED"; then
+        echo "[install.sh] WARN: $label: applying with hunk failures — check output above"
+        patch -N -p1 < "$f" || true
+    elif echo "$out" | grep -q "ALREADY APPLIED"; then
+        echo "[install.sh] INFO: $label: already applied, skipping"
+    else
+        patch -N -p1 < "$f"
+    fi
+}
+
 # Apply rotation patches (idempotent: -N skips already-applied hunks; || true ignores the
 # non-zero exit patch returns when skipping; 006-lazy-g2d-open applied inline below)
 cd /root/lichee/lichee/linux-4.9
-patch -N -p1 < "$SCRIPT_DIR/patches/0001-feat-support-disp2-fb-hw-rotate.patch" || true
+apply_patch "$SCRIPT_DIR/patches/0001-feat-support-disp2-fb-hw-rotate.patch"
 python3 -c "
 fname = '/root/lichee/lichee/linux-4.9/drivers/video/fbdev/sunxi/disp2/disp/fb_g2d_rot.c'
 sig = 'int fb_get_rot_degree(unsigned int fb_id)'
@@ -28,13 +42,13 @@ DEV_FB="/root/lichee/lichee/linux-4.9/drivers/video/fbdev/sunxi/disp2/disp/dev_f
 sed -i '72s/dst_image_h\.width;/dst_image_h.height;/' "$FB_G2D"
 sed -i '74s/dst_image_h\.height;/dst_image_h.width;/' "$FB_G2D"
 sed -i 's/FB_ROTATION_HW_0 && degree > FB_ROTATION_HW_270/FB_ROTATION_HW_0 || degree > FB_ROTATION_HW_270/' "$FB_G2D"
-patch -N -p1 < "$SCRIPT_DIR/patches/006-lazy-g2d-open.patch" || true  # lazy g2d_open fix
+apply_patch "$SCRIPT_DIR/patches/006-lazy-g2d-open.patch"  # lazy g2d_open fix
 # Fix stale G2D_RELEASE label in fb_g2d_rot_create() — 006 hunk silently fails vs post-0001 state
 sed -i 's/\tgoto G2D_RELEASE;/\tgoto ERROR;/' "$FB_G2D"
 sed -i '/^G2D_RELEASE:$/d' "$FB_G2D"
 sed -i '/^\tg2d_release(0, &g2d_file);/d' "$FB_G2D"
-patch -N -p1 < "$SCRIPT_DIR/patches/008-remove-init-apply.patch" || true  # remove init apply()
-patch -N -p1 < "$SCRIPT_DIR/patches/012-fix-copy-boot-fb-skip-rotation.patch" || true  # fix: skip rotation copy when G2D active
+apply_patch "$SCRIPT_DIR/patches/008-remove-init-apply.patch"  # remove init apply()
+apply_patch "$SCRIPT_DIR/patches/012-fix-copy-boot-fb-skip-rotation.patch"  # fix: skip rotation copy when G2D active
 python3 -c "
 fname = '$DEV_FB'
 with open(fname) as f: c = f.read()
@@ -45,7 +59,7 @@ with open(fname, 'w') as f: f.write(c.replace(target, block + target, 1))
 "
 
 cd /root/lichee/lichee/brandy-2.0/u-boot-2018
-patch -N -p1 < "$SCRIPT_DIR/patches/0001-feat-support-fb-bootlogo-rotate.patch" || true
+apply_patch "$SCRIPT_DIR/patches/0001-feat-support-fb-bootlogo-rotate.patch"
 
 cd "$SCRIPT_DIR"
 
