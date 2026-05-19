@@ -29,6 +29,10 @@ sed -i '72s/dst_image_h\.width;/dst_image_h.height;/' "$FB_G2D"
 sed -i '74s/dst_image_h\.height;/dst_image_h.width;/' "$FB_G2D"
 sed -i 's/FB_ROTATION_HW_0 && degree > FB_ROTATION_HW_270/FB_ROTATION_HW_0 || degree > FB_ROTATION_HW_270/' "$FB_G2D"
 patch -N -p1 < "$SCRIPT_DIR/patches/006-lazy-g2d-open.patch" || true  # lazy g2d_open fix
+# Fix stale G2D_RELEASE label in fb_g2d_rot_create() — 006 hunk silently fails vs post-0001 state
+sed -i 's/\tgoto G2D_RELEASE;/\tgoto ERROR;/' "$FB_G2D"
+sed -i '/^G2D_RELEASE:$/d' "$FB_G2D"
+sed -i '/^\tg2d_release(0, &g2d_file);/d' "$FB_G2D"
 patch -N -p1 < "$SCRIPT_DIR/patches/008-remove-init-apply.patch" || true  # remove init apply()
 patch -N -p1 < "$SCRIPT_DIR/patches/012-fix-copy-boot-fb-skip-rotation.patch" || true  # fix: skip rotation copy when G2D active
 python3 -c "
